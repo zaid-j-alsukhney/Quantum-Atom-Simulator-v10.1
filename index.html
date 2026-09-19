@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Atom Simulator v2</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <div class="eyebrow">مشروع النموذج الميكانيكي الموجي للذرة</div>
+    <h1>⚛️ Quantum Atom Simulator <span>v10.1</span></h1>
+    <p>محاكاة تفاعلية لسحابة الاحتمال، التوزيع الإلكتروني، ومستويات الطاقة والأوربيتالات.</p>
+  </div>
+  <div class="status"><span class="dot"></span> محاكاة تفاعلية</div>
+</header>
+
+<main class="layout">
+  <section class="viewer card">
+    <div class="viewer-head">
+      <div>
+        <h2 id="orbitalTitle">1s — الأوربيتال الكروي</h2>
+        <p id="orbitalDescription">التوزيع الاحتمالي للإلكترون في الأوربيتال المختار.</p>
+      </div>
+      <div class="badge" id="modeBadge">S Orbital</div>
+    </div>
+    <canvas id="atomCanvas"></canvas>
+    <div class="viewer-help">
+      <span>🖱️ اسحب للتدوير</span>
+      <span>🔍 عجلة الفأرة للتكبير</span>
+      <span>🎯 قياس = عينة احتمالية</span>
+    </div>
+  </section>
+
+  <aside class="controls">
+    <section class="card panel">
+      <h2>⚛️ اختر الذرة</h2>
+      <label for="elementSearch">البحث عن عنصر</label><input id="elementSearch" type="text" placeholder="مثال: Oxygen أو O"><label for="element">العنصر</label><select id="element"></select>
+
+      <div class="element-hero">
+        <div class="symbol" id="elementSymbol">H</div>
+        <div>
+          <strong id="elementName">Hydrogen — الهيدروجين</strong>
+          <span id="elementMeta">Z = 1</span>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div><span>العدد الذري Z</span><strong id="atomicNumber">1</strong></div>
+        <div><span>عدد الإلكترونات</span><strong id="electronCount">1</strong></div>
+        <div><span>الغلاف الخارجي</span><strong id="outerShell">n = 1</strong></div>
+        <div><span>أقصى إلكترونات</span><strong id="capacity">2</strong></div>
+      </div>
+
+      <div class="nucleus-bar">
+        <span>النواة</span>
+        <span id="nucleusText">1 بروتون + 0 نيوترون*</span>
+      </div>
+    </section>
+
+    <section class="card panel">
+      <h2>🔬 الأوربيتالات</h2>
+      <p class="small">تظهر هنا الأوربيتالات الموجودة في التوزيع الإلكتروني للعنصر. ويمكنك أيضًا استعراض أي أوربيتال رئيسي.</p>
+      <div id="orbitalButtons" class="orbital-buttons"></div>
+    </section>
+
+    <section class="card panel">
+      <h2>🧬 التوزيع الإلكتروني</h2>
+      <div id="configuration" class="configuration"></div>
+      <div id="shells" class="shells"></div>
+    </section><section class="card panel"><h2>⚛️ مستويات الطاقة</h2><div id="energyLevels"></div></section>
+
+    <section class="card panel">
+      <h2>🎛️ التحكم</h2>
+
+      <label for="density">كثافة السحابة</label>
+      <input id="density" type="range" min="350" max="10000" value="3000">
+      <div class="range-value"><span>نقاط</span><strong id="densityValue">1500</strong></div>
+
+      <label for="size">حجم السحابة</label>
+      <input id="size" type="range" min="0.55" max="2.25" step="0.05" value="1">
+      <div class="range-value"><span>المقياس</span><strong id="sizeValue">1.00×</strong></div>
+
+      <label for="speed">سرعة الحركة</label>
+      <input id="speed" type="range" min="0" max="3" step="0.1" value="1">
+      <div class="range-value"><span>السرعة</span><strong id="speedValue">0.7×</strong></div>
+    </section>
+
+    <section class="card panel">
+      <h2>🎯 تجربة القياس</h2>
+      <p class="small">النقطة التي تظهر بعد القياس هي نتيجة محتملة واحدة. تكرار القياس يبني صورة إحصائية لتوزيع الاحتمال.</p>
+      <button id="measureBtn" class="primary">قياس موقع الإلكترون</button>
+      <div id="measurement" class="measurement">لم يتم إجراء قياس بعد.</div>
+    </section>
+
+    <section class="card panel compare-panel">
+      <h2>🔄 ماذا تغير عند تغيير العنصر؟</h2>
+      <div class="compare">
+        <div><span class="compare-title">النواة</span><p>يتغير عدد البروتونات Z، فتزداد شحنة النواة.</p></div>
+        <div><span class="compare-title">الإلكترونات</span><p>يتغير عدد الإلكترونات ويتغير التوزيع الإلكتروني.</p></div>
+        <div><span class="compare-title">الأوربيتالات</span><p>العنصر يحدد أي الأوربيتالات تكون مشغولة في حالته الأرضية.</p></div>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<footer>
+  <span>Quantum Atom Simulator v10.1</span>
+  <span>* عدد النيوترونات تقديري تعليميًا وليس نظيرًا محددًا.</span>
+</footer>
+<script src="script.js"></script>
+
+<div id="quantumDiagnostics" style="position:fixed;right:12px;bottom:12px;z-index:9999;background:#111827;color:white;padding:12px;border-radius:10px;max-width:320px">
+<b>Quantum Diagnostics v10</b>
+<div id="qdContent">Loading...</div>
+</div>
+</body>
+
+</html>
