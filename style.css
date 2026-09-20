@@ -9,3 +9,6 @@ body{margin:0;min-height:100vh;color:var(--text);font-family:"Segoe UI",Tahoma,A
 @media(max-width:1050px){.layout{grid-template-columns:1fr}.viewer{min-height:700px}#atomCanvas{min-height:560px}}@media(max-width:650px){.topbar,footer{flex-direction:column;align-items:flex-start}.viewer{padding:12px}.viewer-head{flex-direction:column}.orbital-buttons{grid-template-columns:repeat(4,1fr)}}
 
 #elementSearch{width:100%;padding:12px;border-radius:11px;border:1px solid rgba(139,188,255,.16);background:#0c1a2d;color:white}.orbital-buttons{max-height:260px;overflow:auto}.panel{scroll-margin-top:20px}
+
+/* v10.5 shell cloud legend */
+.viewer-help span:last-child{color:#b8ddff}

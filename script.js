@@ -86,7 +86,75 @@ function makeParticle(name){
   return{x,y,z,phase:Math.random()*Math.PI*2};
 }
 
-function regenerateParticles(){particles=Array.from({length:+densitySlider.value},()=>makeParticle(currentOrbital))}
+let shellParticles=[];
+
+function buildShellParticles(total){
+  const cfg=configFor(currentZ);
+  const shellCounts={};
+  cfg.forEach(x=>shellCounts[x.n]=(shellCounts[x.n]||0)+x.e);
+  const levels=getEnergyShellCount();
+  if(total<=0){ shellParticles=[]; return; }
+
+  // Allocate samples according to the number of electrons in each principal shell.
+  // Keep a small floor per occupied shell so outer shells remain visually legible.
+  const entries=Object.entries(shellCounts);
+  const minPerShell=Math.min(260,Math.max(30,Math.floor(total*0.012)));
+  const counts={};
+  entries.forEach(([n,e])=>{
+    counts[n]=Math.max(minPerShell,Math.round(total*(e/currentZ)));
+  });
+  let used=Object.values(counts).reduce((a,b)=>a+b,0);
+  while(used>total){
+    const key=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
+    if(counts[key]>minPerShell){counts[key]--;used--;}else break;
+  }
+  while(used<total){
+    const key=entries.reduce((best,[n,e])=>
+      ((counts[n]||0)/e < (counts[best]||0)/(shellCounts[best]||1) ? n : best),entries[0][0]);
+    counts[key]=(counts[key]||0)+1;
+    used++;
+  }
+
+  shellParticles=[];
+  for(const [n,count] of Object.entries(counts)){
+    const level=+n;
+    for(let i=0;i<count;i++){
+      const u=Math.random()*2-1;
+      const phi=Math.random()*Math.PI*2;
+      const tangential=Math.sqrt(Math.max(0,1-u*u));
+
+      // A real shell is represented here as a thick probability band, not a line.
+      // Offset is measured in scene units (relative to base) so every shell has
+      // a visible gap and a probability peak near the middle of its thickness.
+      const shellSpacing=1.38;
+      const shellRadius=1.05 + (level-1)*shellSpacing;
+      const sigmaAbs=0.22 + Math.min(0.05,level*0.006);
+      const offset=Math.max(-0.62,Math.min(0.62,randomNormal()*sigmaAbs));
+      const radius=shellRadius+offset;
+      const sigma=sigmaAbs/shellRadius;
+
+      shellParticles.push({
+        level,
+        nx:tangential*Math.cos(phi),
+        ny:u,
+        nz:tangential*Math.sin(phi),
+        radialOffset:offset/shellRadius,
+        sigma,
+        phase:Math.random()*Math.PI*2
+      });
+    }
+  }
+}
+
+function regenerateParticles(){
+  const total=Math.max(1,+densitySlider.value);
+  // Keep the selected orbital visibly prominent while making the shell structure
+  // the dominant background probability cloud.
+  const shellCount=Math.min(22500,Math.max(160,Math.floor(total*0.70)));
+  const orbitalCount=Math.max(1,total-shellCount);
+  particles=Array.from({length:orbitalCount},()=>makeParticle(currentOrbital));
+  buildShellParticles(shellCount);
+}
 
 function rotatePoint(p,a,v){const ca=Math.cos(a),sa=Math.sin(a);let x=p.x*ca-p.z*sa,z=p.x*sa+p.z*ca,y=p.y;const cv=Math.cos(v),sv=Math.sin(v);return{x,y:y*cv-z*sv,z:y*sv+z*cv}}
 function project(p,cx,cy,scale){const perspective=1/(1+p.z*.045);return{x:cx+p.x*scale*perspective,y:cy+p.y*scale*perspective,size:perspective,depth:p.z}}
@@ -101,12 +169,159 @@ function drawNucleus(cx,cy,r){
   ctx.fillStyle="#fff";ctx.font="bold 12px Segoe UI";ctx.textAlign="center";ctx.fillText(elements[currentZ-1].symbol,cx,cy+4);ctx.textAlign="start";
 }
 
+
+function getEnergyShellCount(){
+  const cfg=configFor(currentZ);
+  return cfg.length ? Math.max(...cfg.map(x=>x.n)) : 1;
+}
+
+function drawEnergyShells(cx,cy,w,h,base,tiltAngle){
+  const levels=getEnergyShellCount();
+  const shellSpacing=1.38;
+  const outerRadius=base*(1.05+(levels-1)*shellSpacing+0.62);
+  const step=base*shellSpacing;
+  const labels=['K','L','M','N','O','P','Q'];
+  const ellipseFactor=Math.max(.28,Math.min(.96,Math.cos(tiltAngle)));
+
+  ctx.save();
+  for(let i=1;i<=levels;i++){
+    const radius=base*(1.05+(i-1)*shellSpacing);
+    // Guide ring is deliberately subtle; the particle cloud carries the probability.
+    const glow=0.022 + i/levels*0.012;
+    ctx.beginPath();
+    ctx.strokeStyle=`rgba(97,200,255,${glow})`;
+    ctx.lineWidth=i===levels?1.2:.85;
+    ctx.setLineDash([8,10]);
+    ctx.ellipse(cx,cy,radius,radius*ellipseFactor,rotation*0.16,0,Math.PI*2);
+    ctx.stroke();
+    if(i<=labels.length){
+      ctx.setLineDash([]);ctx.fillStyle='rgba(190,225,255,.72)';ctx.font='700 10px Segoe UI';ctx.textAlign='center';
+      ctx.fillText(`${labels[i-1]} • n=${i}`,cx+radius*.72,cy-radius*ellipseFactor*.72);ctx.textAlign='start';
+    }
+  }
+  ctx.restore();
+
+  if(!shellParticles.length) return;
+  const points=shellParticles.map(p=>{
+    const shellRadius=1.05+(p.level-1)*shellSpacing;
+    const radius=shellRadius*(1+p.radialOffset);
+    const drift=.010*(+speedSlider.value);
+    const phase=p.phase;
+    const v={
+      x:p.nx*radius + Math.sin(phase+rotation)*drift,
+      y:p.ny*radius + Math.cos(phase+tiltAngle)*drift,
+      z:p.nz*radius + Math.sin(phase*.73+tiltAngle)*drift
+    };
+    const projected=project(rotatePoint(v,rotation,tiltAngle),cx,cy,base);
+    const shellDensity=Math.exp(-0.5*Math.pow(p.radialOffset/p.sigma,2));
+    return {...projected,level:p.level,shellDensity};
+  }).sort((a,b)=>a.depth-b.depth);
+
+  for(const p of points){
+    const q=Math.max(.35,Math.min(1.25,p.size));
+    const alpha=(0.028+q*0.070)*(0.38+1.05*p.shellDensity);
+    const radius=.60+q*(0.82+0.65*p.shellDensity);
+    ctx.beginPath();ctx.fillStyle=`rgba(139,190,255,${alpha})`;ctx.arc(p.x,p.y,radius,0,Math.PI*2);ctx.fill();
+  }
+}
+
+function draw(now){
+  const r=canvas.getBoundingClientRect(),w=r.width,h=r.height;drawBackground(w,h);
+  const cx=w/2,cy=h/2;
+  const zFactor=1/Math.pow(currentZ,.16);
+  const base=Math.min(w,h)/11*zoom*+sizeSlider.value*zFactor;
+  drawEnergyShells(cx,cy,w,h,base,tilt);
+  const projected=particles.map(p=>{const a={x:p.x+Math.sin(now*.0004+p.phase)*.035*+speedSlider.value,y:p.y+Math.cos(now*.00035+p.phase)*.035*+speedSlider.value,z:p.z};return {...project(rotatePoint(a,rotation,tilt),cx,cy,base),original:p}}).sort((a,b)=>a.depth-b.depth);
+  for(const p of projected){const q=Math.max(.25,Math.min(1.1,p.size));ctx.beginPath();ctx.fillStyle=`rgba(91,190,255,${.055+q*.09})`;ctx.arc(p.x,p.y,q*2.2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.fillStyle=`rgba(125,215,255,${.16+q*.22})`;ctx.arc(p.x,p.y,Math.max(.55,1.25*q),0,Math.PI*2);ctx.fill()}
+  drawNucleus(cx,cy,Math.max(7,base*.065));
+  for(const m of measurements){const p=project(rotatePoint(m,rotation,tilt),cx,cy,base);const a=Math.max(0,1-m.age/2800);ctx.beginPath();ctx.fillStyle=`rgba(101,230,166,${a})`;ctx.shadowBlur=12;ctx.shadowColor="rgba(101,230,166,.7)";ctx.arc(p.x,p.y,4.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+  measurements.forEach(m=>m.age+=16);measurements=measurements.filter(m=>m.age<=2800);requestAnimationFrame(draw)
+}
+
+function rotatePoint(p,a,v){const ca=Math.cos(a),sa=Math.sin(a);let x=p.x*ca-p.z*sa,z=p.x*sa+p.z*ca,y=p.y;const cv=Math.cos(v),sv=Math.sin(v);return{x,y:y*cv-z*sv,z:y*sv+z*cv}}
+function project(p,cx,cy,scale){const perspective=1/(1+p.z*.045);return{x:cx+p.x*scale*perspective,y:cy+p.y*scale*perspective,size:perspective,depth:p.z}}
+function resizeCanvas(){const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(1,Math.floor(r.width*dpr));canvas.height=Math.max(1,Math.floor(r.height*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);stars=Array.from({length:110},()=>({x:Math.random()*r.width,y:Math.random()*r.height,r:Math.random()*1.4+.2,a:Math.random()*.4+.1}))}
+
+function drawBackground(w,h){ctx.clearRect(0,0,w,h);for(const s of stars){ctx.beginPath();ctx.fillStyle=`rgba(180,215,255,${s.a})`;ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill()}const g=ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.min(w,h)*.48);g.addColorStop(0,"rgba(70,130,220,.10)");g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}
+
+function drawNucleus(cx,cy,r){
+  const glow=ctx.createRadialGradient(cx-r*.3,cy-r*.35,1,cx,cy,r);glow.addColorStop(0,"#fff");glow.addColorStop(.14,"#ffb1dc");glow.addColorStop(.52,"#ff4f9a");glow.addColorStop(1,"rgba(140,30,100,.12)");
+  ctx.beginPath();ctx.fillStyle=glow;ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.strokeStyle="rgba(255,130,200,.45)";ctx.lineWidth=1.5;ctx.arc(cx,cy,r*1.65,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle="#fff";ctx.font="bold 12px Segoe UI";ctx.textAlign="center";ctx.fillText(elements[currentZ-1].symbol,cx,cy+4);ctx.textAlign="start";
+}
+
+
+function getEnergyShellCount(){
+  const cfg=configFor(currentZ);
+  return cfg.length ? Math.max(...cfg.map(x=>x.n)) : 1;
+}
+
+function drawEnergyShells(cx,cy,w,h,base,tiltAngle){
+  const levels=getEnergyShellCount();
+  // Use the same atom scale as the cloud: zoom/size/Z scaling affects shells too.
+  const outerRadius=base*(2.45 + levels*0.56);
+  const step=outerRadius/Math.max(levels,1);
+  const labels=['K','L','M','N','O','P','Q'];
+  const ellipseFactor=Math.max(.26,Math.min(.96,Math.cos(tiltAngle)));
+
+  ctx.save();
+  for(let i=1;i<=levels;i++){
+    const radius=step*i;
+    // Faint guide ring only; probability points are the primary representation.
+    const glow=0.015 + i/levels*0.012;
+    ctx.beginPath();
+    ctx.strokeStyle=`rgba(97,200,255,${glow})`;
+    ctx.lineWidth=i===levels?1.2:.75;
+    ctx.setLineDash([7,8]);
+    ctx.ellipse(cx,cy,radius,radius*ellipseFactor,rotation*0.16,0,Math.PI*2);
+    ctx.stroke();
+
+    if(i<=labels.length){
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(190,225,255,.72)';
+      ctx.font='700 10px Segoe UI';
+      ctx.textAlign='center';
+      ctx.fillText(`${labels[i-1]} • n=${i}`,cx+radius*.72,cy-radius*ellipseFactor*.72);
+      ctx.textAlign='start';
+    }
+  }
+  ctx.restore();
+
+  if(!shellParticles.length) return;
+  const points=shellParticles.map(p=>{
+    const shellRadius=step*p.level;
+    const radius=shellRadius*(1+p.radialOffset);
+    const drift=.008*(+speedSlider.value);
+    const phase=p.phase;
+    const v={
+      x:p.nx*(radius/base) + Math.sin(phase+rotation)*drift,
+      y:p.ny*(radius/base) + Math.cos(phase+tiltAngle)*drift,
+      z:p.nz*(radius/base) + Math.sin(phase*.73+tiltAngle)*drift
+    };
+    const projected=project(rotatePoint(v,rotation,tiltAngle),cx,cy,base);
+    const shellDensity=Math.exp(-0.5*Math.pow(p.radialOffset/p.sigma,2));
+    return {...projected,level:p.level,shellDensity};
+  }).sort((a,b)=>a.depth-b.depth);
+
+  for(const p of points){
+    const q=Math.max(.35,Math.min(1.25,p.size));
+    // Strongest at the middle of the shell's radial thickness, fading toward edges.
+    const alpha=(0.035 + q*0.075)*(0.45 + 0.8*p.shellDensity);
+    const radius=.65 + q*(0.9 + 0.55*p.shellDensity);
+    ctx.beginPath();
+    ctx.fillStyle=`rgba(139,190,255,${alpha})`;
+    ctx.arc(p.x,p.y,radius,0,Math.PI*2);
+    ctx.fill();
+  }
+}
 function draw(now){
   const r=canvas.getBoundingClientRect(),w=r.width,h=r.height;drawBackground(w,h);
   const cx=w/2,cy=h/2;
   // Larger Z means stronger nuclear attraction; visual scale decreases slightly with Z.
   const zFactor=1/Math.pow(currentZ,.16);
   const base=Math.min(w,h)/11*zoom*+sizeSlider.value*zFactor;
+  drawEnergyShells(cx,cy,w,h,base,tilt);
   const projected=particles.map(p=>{const a={x:p.x+Math.sin(now*.0004+p.phase)*.035*+speedSlider.value,y:p.y+Math.cos(now*.00035+p.phase)*.035*+speedSlider.value,z:p.z};return {...project(rotatePoint(a,rotation,tilt),cx,cy,base),original:p}}).sort((a,b)=>a.depth-b.depth);
   for(const p of projected){const q=Math.max(.25,Math.min(1.1,p.size));ctx.beginPath();ctx.fillStyle=`rgba(91,190,255,${.055+q*.09})`;ctx.arc(p.x,p.y,q*2.2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.fillStyle=`rgba(125,215,255,${.16+q*.22})`;ctx.arc(p.x,p.y,Math.max(.55,1.25*q),0,Math.PI*2);ctx.fill()}
   drawNucleus(cx,cy,Math.max(7,base*.065));
@@ -223,3 +438,21 @@ function updateEnergyLevels(){
  box.innerHTML=h;
 }
 setInterval(updateEnergyLevels,500);
+
+
+
+/* ===== V10.5 persistent controls ===== */
+(function(){
+  try{
+    densitySlider.max='30000';
+    speedSlider.max='5';
+    densitySlider.addEventListener('input',()=>{ if(+densitySlider.value>30000)densitySlider.value=30000; });
+    speedSlider.addEventListener('input',()=>{ if(+speedSlider.value>5)speedSlider.value=5; });
+  }catch(e){}
+})();
+
+
+/* V10.7 persistent controls */
+window.addEventListener('load',()=>{
+ try{ densitySlider.max='30000'; speedSlider.max='5'; updateUI(); }catch(e){}
+});
