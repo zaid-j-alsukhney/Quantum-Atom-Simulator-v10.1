@@ -64,25 +64,82 @@ function populateOrbitalButtons(){
     const b=document.createElement("button");b.className="orbital-btn"+(name===currentOrbital?" active ":"")+(occupied.has(name)?" occupied":"");
     b.dataset.orbital=name;
     b.innerHTML=`${name}<small>${occupied.has(name)?"مشغول":"غير مشغول"}</small>`;
-    b.onclick=()=>{currentOrbital=name;regenerateParticles();updateUI();measurement.textContent="تم اختيار "+name+".";};
+    b.onclick=()=>{currentOrbital=name; setOrbitalViewPreset(getOrbital(name).type); measurement.textContent="تم اختيار "+name+" وتمت معايرة زاوية العرض للشكل.";};
     orbitalButtons.appendChild(b);
   }
 }
 
 function randomNormal(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
 
+// --- Wave-mechanical orbital sampler ---------------------------------------
+// The selected orbital is sampled from the hydrogen-like probability density
+// |psi_nlm|^2 = |R_nl(r)|^2 |Y_lm(theta,phi)|^2.
+// We use m=0 for the educational visualization so s/p/d/f nodal structure is
+// visible without introducing an extra magnetic-orientation selector.
+function legendreP(l,x){
+  if(l===0)return 1;
+  if(l===1)return x;
+  let p0=1,p1=x;
+  for(let k=2;k<=l;k++){const p=((2*k-1)*x*p1-(k-1)*p0)/k;p0=p1;p1=p}
+  return p1;
+}
+function assocLaguerre(k,a,x){
+  if(k===0)return 1;
+  if(k===1)return 1+a-x;
+  let l0=1,l1=1+a-x;
+  for(let j=2;j<=k;j++){
+    const lj=((2*j-1+a-x)*l1-(j-1+a)*l0)/j;
+    l0=l1;l1=lj;
+  }
+  return l1;
+}
+const radialTables=new Map();
+function radialTable(n,l){
+  const key=`${n}-${l}`; if(radialTables.has(key))return radialTables.get(key);
+  const N=900, maxR=Math.max(12,n*n*2.2), step=maxR/(N-1), vals=[];
+  let maxW=0;
+  for(let i=0;i<N;i++){
+    const rho=i*step;
+    const x=2*rho/n;
+    const L=assocLaguerre(n-l-1,2*l+1,x);
+    const R=Math.exp(-x/2)*Math.pow(Math.max(x,1e-9),l)*L;
+    const w=rho*rho*R*R;
+    vals.push(w); if(w>maxW)maxW=w;
+  }
+  const cdf=[]; let sum=0;
+  for(const w of vals){sum+=w;cdf.push(sum)}
+  for(let i=0;i<cdf.length;i++)cdf[i]/=sum||1;
+  const table={step,maxR,vals,cdf,maxW};radialTables.set(key,table);return table;
+}
+function sampleRadial(n,l){
+  const t=radialTable(n,l), target=Math.random(), c=t.cdf;
+  let lo=0,hi=c.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(c[mid]<target)lo=mid+1;else hi=mid}
+  const i=Math.max(1,lo), c0=c[i-1],c1=c[i], f=(target-c0)/Math.max(1e-9,c1-c0);
+  return ((i-1)+f)*t.step;
+}
+function sampleWaveAngle(l){
+  // |Y_l0|^2 is proportional to P_l(cos(theta))^2.
+  // Rejection sampling over mu=cos(theta) keeps the exact nodal zeros.
+  let mu,weight;
+  do{mu=Math.random()*2-1;const P=legendreP(l,mu);weight=P*P;}while(Math.random()>weight);
+  return Math.acos(mu);
+}
 function makeParticle(name){
   const {n,l}=getOrbital(name);
-  // Educational probability-cloud sampler. Angular terms distinguish s,p,d,f.
-  let r=Math.pow(Math.random(),1/3)*(2.0+n*.95),theta=Math.acos(2*Math.random()-1),phi=Math.random()*Math.PI*2;
-  let x=r*Math.sin(theta)*Math.cos(phi),y=r*Math.sin(theta)*Math.sin(phi),z=r*Math.cos(theta);
-  if(l===1){const sign=Math.random()<.5?-1:1;const a=Math.abs(Math.cos(theta))**.55;z=sign*r*a;x*=.62;y*=.62}
-  if(l===2){const a=Math.abs(Math.sin(theta)*Math.cos(2*phi));x=r*a*Math.cos(phi);y=r*a*Math.sin(phi);z=r*Math.cos(theta)*.68}
-  if(l===3){const a=Math.abs(Math.sin(theta)*Math.cos(3*phi));x=r*a*Math.cos(phi);y=r*a*Math.sin(phi);z=r*Math.cos(theta)*.75}
-  // n-dependent radial rings/nodes, kept deliberately simple.
-  const nodeFactor=0.72+0.28*Math.abs(Math.sin(r*(1.1+.25*n)));
-  x*=nodeFactor;y*=nodeFactor;z*=nodeFactor;
-  x+=randomNormal()*.04;y+=randomNormal()*.04;z+=randomNormal()*.04;
+  const rho=sampleRadial(n,l);
+  const theta=sampleWaveAngle(l), phi=Math.random()*Math.PI*2;
+
+  // rho is a dimensionless hydrogenic radius. Normalize each orbital to a
+  // comparable visual size while retaining its radial nodes and shape.
+  const visualRadius=(rho/(n*n))*1.55;
+  let x=visualRadius*Math.sin(theta)*Math.cos(phi);
+  let y=visualRadius*Math.sin(theta)*Math.sin(phi);
+  let z=visualRadius*Math.cos(theta);
+
+  // Tiny jitter prevents identical projected pixels while keeping nodal
+  // planes/rings sharp. It is deliberately much smaller than the cloud.
+  x+=randomNormal()*.006;y+=randomNormal()*.006;z+=randomNormal()*.006;
   return{x,y,z,phase:Math.random()*Math.PI*2};
 }
 
@@ -90,60 +147,51 @@ let shellParticles=[];
 
 function buildShellParticles(total){
   const cfg=configFor(currentZ);
-  const shellCounts={};
-  cfg.forEach(x=>shellCounts[x.n]=(shellCounts[x.n]||0)+x.e);
-  const levels=getEnergyShellCount();
-  if(total<=0){ shellParticles=[]; return; }
+  const shellNs=[...new Set(cfg.map(x=>x.n))].sort((a,b)=>a-b);
+  if(total<=0 || !shellNs.length){shellParticles=[];return;}
 
-  // Allocate samples according to the number of electrons in each principal shell.
-  // Keep a small floor per occupied shell so outer shells remain visually legible.
-  const entries=Object.entries(shellCounts);
-  const minPerShell=Math.min(260,Math.max(30,Math.floor(total*0.012)));
-  const counts={};
-  entries.forEach(([n,e])=>{
-    counts[n]=Math.max(minPerShell,Math.round(total*(e/currentZ)));
-  });
-  let used=Object.values(counts).reduce((a,b)=>a+b,0);
-  while(used>total){
-    const key=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
-    if(counts[key]>minPerShell){counts[key]--;used--;}else break;
-  }
-  while(used<total){
-    const key=entries.reduce((best,[n,e])=>
-      ((counts[n]||0)/e < (counts[best]||0)/(shellCounts[best]||1) ? n : best),entries[0][0]);
-    counts[key]=(counts[key]||0)+1;
-    used++;
-  }
-
+  // The orbital selector is intentionally applied to EVERY visible energy
+  // shell. This is a visualization mode: n still controls the shell radius,
+  // while the selected s/p/d/f type controls the angular appearance of all
+  // shells. That makes the orbital control immediately visible across the
+  // whole atom instead of changing only one shell.
+  const selected=getOrbital(currentOrbital);
+  const l=selected.l;
+  const levels=shellNs.length;
+  const baseCount=Math.floor(total/levels);
+  const remainder=total-baseCount*levels;
+  const shellSpacing=1.38;
   shellParticles=[];
-  for(const [n,count] of Object.entries(counts)){
-    const level=+n;
-    for(let i=0;i<count;i++){
-      const u=Math.random()*2-1;
-      const phi=Math.random()*Math.PI*2;
-      const tangential=Math.sqrt(Math.max(0,1-u*u));
 
-      // A real shell is represented here as a thick probability band, not a line.
-      // Offset is measured in scene units (relative to base) so every shell has
-      // a visible gap and a probability peak near the middle of its thickness.
-      const shellSpacing=1.38;
-      const shellRadius=1.05 + (level-1)*shellSpacing;
-      const sigmaAbs=0.22 + Math.min(0.05,level*0.006);
-      const offset=Math.max(-0.62,Math.min(0.62,randomNormal()*sigmaAbs));
-      const radius=shellRadius+offset;
-      const sigma=sigmaAbs/shellRadius;
+  shellNs.forEach((n,shellIndex)=>{
+    const level=+n;
+    const count=baseCount+(shellIndex<remainder?1:0);
+    const shellRadius=1.05+(level-1)*shellSpacing;
+
+    for(let i=0;i<count;i++){
+      const theta=sampleWaveAngle(l);
+      const phi=Math.random()*Math.PI*2;
+      const u=Math.cos(theta);
+      const tangential=Math.sqrt(Math.max(0,1-u*u));
+      let nx=tangential*Math.cos(phi), ny=u, nz=tangential*Math.sin(phi);
+
+      // Keep every shell visually narrow and concentric. The angular part comes
+      // from the selected orbital, while the principal quantum number comes
+      // from the shell itself.
+      const sigmaAbs=0.19+Math.min(0.035,level*0.004);
+      const offset=Math.max(-0.58,Math.min(0.58,randomNormal()*sigmaAbs));
+      const norm=Math.hypot(nx,ny,nz)||1;
+      nx/=norm; ny/=norm; nz/=norm;
 
       shellParticles.push({
-        level,
-        nx:tangential*Math.cos(phi),
-        ny:u,
-        nz:tangential*Math.sin(phi),
+        level,nx,ny,nz,
         radialOffset:offset/shellRadius,
-        sigma,
-        phase:Math.random()*Math.PI*2
+        sigma:sigmaAbs/shellRadius,
+        phase:Math.random()*Math.PI*2,
+        orbital:currentOrbital
       });
     }
-  }
+  });
 }
 
 function regenerateParticles(){
@@ -329,6 +377,14 @@ function draw(now){
   measurements.forEach(m=>m.age+=16);measurements=measurements.filter(m=>m.age<=2800);requestAnimationFrame(draw)
 }
 
+window.setOrbitalViewPreset=function(type){
+  const presets={s:{r:0.00,t:0.20},p:{r:0.00,t:0.00},d:{r:Math.PI/4,t:0.28},f:{r:Math.PI/4,t:0.42}};
+  const v=presets[type]||presets.s;
+  rotation=v.r; tilt=v.t; measurements=[]; regenerateParticles(); updateUI();
+  const canvas=document.getElementById('atomCanvas');
+  if(canvas){canvas.dataset.orbitalType=type; canvas.classList.remove('orbital-s','orbital-p','orbital-d','orbital-f'); canvas.classList.add('orbital-'+type);}
+};
+
 function updateUI(){
   const e=elements[currentZ-1],cfg=configFor(currentZ),d=getOrbital(currentOrbital),info=orbitalInfo[d.type];
   elementSymbol.textContent=e.symbol;elementName.textContent=`${e.en} — ${e.ar}`;elementMeta.textContent=`Z = ${currentZ}`;
@@ -456,3 +512,96 @@ setInterval(updateEnergyLevels,500);
 window.addEventListener('load',()=>{
  try{ densitySlider.max='30000'; speedSlider.max='5'; updateUI(); }catch(e){}
 });
+
+// Interactive self-test: each answer starts hidden and is revealed by its own button.
+document.querySelectorAll('.answer-toggle').forEach((button) => {
+  button.addEventListener('click', () => {
+    const answer = button.nextElementSibling;
+    const item = button.closest('.self-test-item');
+    const isHidden = answer.hasAttribute('hidden');
+    if (isHidden) {
+      answer.removeAttribute('hidden');
+      button.setAttribute('aria-expanded', 'true');
+      button.textContent = '🙈 إخفاء الجواب';
+      item.classList.add('revealed');
+    } else {
+      answer.setAttribute('hidden', '');
+      button.setAttribute('aria-expanded', 'false');
+      button.textContent = '👁️ إظهار الجواب';
+      item.classList.remove('revealed');
+    }
+  });
+});
+
+/* ===== V12.2 global learning improvements ===== */
+(function(){
+  'use strict';
+
+  const guide = document.getElementById('symbolGuide');
+  const openGuide = document.getElementById('openSymbolGuide');
+  const closeGuide = document.getElementById('closeSymbolGuide');
+  openGuide?.addEventListener('click',()=>{ guide?.removeAttribute('hidden'); guide?.scrollIntoView({behavior:'smooth',block:'nearest'}); });
+  closeGuide?.addEventListener('click',()=>guide?.setAttribute('hidden',''));
+
+  const speakMap = {
+    'n':'en', 'ell':'ell', 'm ell':'m ell', 'm s':'m s',
+    's':'s', 'p':'p', 'd':'d', 'f':'f', 'orbital':'orbital', 'quantum numbers':'quantum numbers'
+  };
+  document.querySelectorAll('.speak-symbol').forEach(btn=>btn.addEventListener('click',()=>{
+    const phrase=speakMap[btn.dataset.speak]||btn.dataset.speak;
+    if(!('speechSynthesis' in window)){ btn.textContent='🔊 النطق غير متاح'; return; }
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(phrase);
+    u.lang='en-US'; u.rate=.82; u.pitch=1;
+    speechSynthesis.speak(u);
+  }));
+
+  const allBtn=document.getElementById('toggleAllAnswers');
+  const status=document.getElementById('answerStatus');
+  const items=()=>[...document.querySelectorAll('.self-test-item')];
+  function setAll(show){
+    items().forEach(item=>{
+      const answer=item.querySelector('.hidden-answer');
+      const btn=item.querySelector('.answer-toggle');
+      if(!answer||!btn)return;
+      if(show){answer.removeAttribute('hidden');btn.setAttribute('aria-expanded','true');btn.textContent='🙈 إخفاء الجواب';item.classList.add('revealed');}
+      else{answer.setAttribute('hidden','');btn.setAttribute('aria-expanded','false');btn.textContent='👁️ إظهار الجواب';item.classList.remove('revealed');}
+    });
+    if(allBtn){allBtn.setAttribute('aria-expanded',String(show));allBtn.textContent=show?'🙈 إخفاء جميع الإجابات':'👁️ إظهار جميع الإجابات';}
+    if(status)status.textContent=show?'ظهرت جميع الإجابات. يمكنك إخفاؤها مرة أخرى.':'كل الإجابات مخفية — حاول أولًا قبل الكشف عنها.';
+  }
+  allBtn?.addEventListener('click',()=>{
+    const anyHidden=items().some(i=>i.querySelector('.hidden-answer')?.hasAttribute('hidden'));
+    setAll(anyHidden);
+  });
+
+  /* Keep technical symbols visually isolated from RTL Arabic so equations read naturally. */
+  const root=document.querySelector('.lesson-copy');
+  if(root){
+    const patterns=[
+      /\b\d+[spdf]\b/g,/\b(?:n|ℓ)\s*=\s*[0-9]+\b/g,/\bm[ℓₛ]\b/g,/\b(?:n²|2n²|2ℓ\+1)\b/g,
+      /p[ₓᵧz]/g,/[+−-]?\s*1\/2/g,/±½/g
+    ];
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){
+      if(!node.nodeValue.trim())return NodeFilter.FILTER_REJECT;
+      const parent=node.parentElement;
+      if(!parent||parent.closest('script,style,button,.math'))return NodeFilter.FILTER_REJECT;
+      return patterns.some(re=>{re.lastIndex=0;return re.test(node.nodeValue)})?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+    }});
+    const nodes=[];let n;while(n=walker.nextNode())nodes.push(n);
+    nodes.forEach(node=>{
+      let text=node.nodeValue, changed=false;
+      patterns.forEach(re=>{
+        re.lastIndex=0;
+        text=text.replace(re,m=>{changed=true;return `@@MATH@@${m}@@END@@`;});
+      });
+      if(!changed)return;
+      const frag=document.createDocumentFragment();
+      text.split(/(@@MATH@@.*?@@END@@)/g).forEach(part=>{
+        if(part.startsWith('@@MATH@@')){const span=document.createElement('span');span.className='math';span.textContent=part.slice(8,-9);frag.appendChild(span);}
+        else frag.appendChild(document.createTextNode(part));
+      });
+      node.parentNode.replaceChild(frag,node);
+    });
+  }
+})();

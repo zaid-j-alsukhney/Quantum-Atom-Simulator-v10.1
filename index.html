@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quantum Atom Simulator v10.6</title>
+  <title>Quantum Atom Simulator v18.0 — النموذج الميكانيكي الموجي</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
   <div>
     <div class="eyebrow">مشروع النموذج الميكانيكي الموجي للذرة</div>
-    <h1>⚛️ Quantum Atom Simulator <span>v10.6</span></h1>
-    <p>محاكاة تفاعلية لسحابة الاحتمال، التوزيع الإلكتروني، ومستويات الطاقة والأوربيتالات.</p>
+    <h1>⚛️ Quantum Atom Simulator <span>v18.0</span></h1>
+    <p>محاكاة تعليمية تساعد على فهم النموذج الميكانيكي الموجي للذرة والأعداد الكمية والأفلاك.</p>
   </div>
   <div class="status"><span class="dot"></span> محاكاة تفاعلية</div>
 </header>
@@ -29,11 +29,31 @@
     <div class="viewer-help">
       <span>🖱️ اسحب للتدوير</span>
       <span>🔍 عجلة الفأرة للتكبير</span>
-      <span>🎯 قياس = عينة احتمالية</span><span>◎ النقاط الخافتة = توزيع الغلاف</span>
+      <span>🎯 القياس = موقع محتمل للإلكترون</span><span>◎ السحابة = تمثيل لمنطقة وجود الإلكترون</span>
+    </div>
+    <div class="quick-understanding card-lite" id="quickUnderstanding">
+      <div class="quick-head"><span>🧠 الفهم السريع — بدون فتح الدرس</span><span class="quick-mode" id="quickModeLabel">استكشاف</span></div>
+      <div class="quick-grid">
+        <div><b id="quickWhatLabel">ماذا أرى؟</b><p id="quickWhat">الإلكترون لا يتحرك في مسار دائري ثابت، بل يوجد في منطقة حول النواة يكون احتمال وجوده فيها أكبر.</p></div>
+        <div><b>كيف أقرأ الاختيار؟</b><p><strong id="quickOrbital">1s</strong> يدل الرقم على مستوى الطاقة الرئيسي، والحرف على المستوى الفرعي وشكل الفلك.</p></div>
+        <div><b>لماذا تتغير الحلقات؟</b><p><strong>n</strong> يحدد مستوى الطاقة الرئيسي، وكلما زاد n اتسع المستوى وازداد عدد المستويات التي تظهر للعنصر.</p></div>
+        <div><b>لماذا النقاط كثيرة؟</b><p>النقاط الكثيرة تساعد على إظهار السحابة بوضوح، ولا تمثل عدد الإلكترونات الحقيقي.</p></div>
+      </div>
     </div>
   </section>
 
   <aside class="controls">
+    <section class="card panel mode-panel">
+      <div class="mode-title-row"><h2>📘 وضع الدرس</h2><span id="modeHelp" class="mode-help">اختر طريقة استخدام المحاكاة</span></div>
+      <div class="lesson-mode-buttons" role="tablist" aria-label="طريقة التعلم">
+        <button class="lesson-mode-btn active" data-mode="explore"><b>🔎 استكشاف</b><span>شاهد وجرّب</span></button>
+        <button class="lesson-mode-btn" data-mode="learn"><b>📘 تعليمي</b><span>اقرأ الشرح خطوة بخطوة</span></button>
+      </div>
+      <div id="modeDescription" class="mode-description">ابدأ بمشاهدة الذرة، ثم غيّر العنصر والأوربيتال ولاحظ ما يتغير.</div>
+      <div class="mode-guide mode-explore-guide"><strong>في الاستكشاف:</strong> أنت حر بالتجربة. غيّر العنصر، الأوربيتال، التكبير والكثافة، وراقب النتيجة بدون إجبارك على خطوات معينة.</div>
+      <div class="mode-guide mode-learn-guide"><strong>في الوضع التعليمي:</strong> اتبع المسار المقترح: <ol><li>اختر الأوربيتال.</li><li>لاحظ شكله وماذا يعني <span class="math">n</span> و<span class="math">ℓ</span>.</li><li>اقرأ التفسير الحي للقيم الحالية.</li><li>طبّق القاعدة في الأمثلة قبل الانتقال للاختبار.</li></ol></div>
+    </section>
+
     <section class="card panel">
       <h2>⚛️ اختر الذرة</h2>
       <label for="elementSearch">البحث عن عنصر</label><input id="elementSearch" type="text" placeholder="مثال: Oxygen أو O"><label for="element">العنصر</label><select id="element"></select>
@@ -71,6 +91,17 @@
       <div id="shells" class="shells"></div>
     </section><section class="card panel"><h2>⚛️ مستويات الطاقة</h2><div id="energyLevels"></div></section>
 
+    <section class="card panel quantum-live-panel">
+      <h2>🔢 ماذا تعني القيم الحالية؟</h2>
+      <div class="quantum-live-grid">
+        <div><b>n</b><span id="mainN">1</span><small>مستوى الطاقة الرئيسي</small></div>
+        <div><b>ℓ</b><span id="mainL">0</span><small>نوع المستوى الفرعي</small></div>
+        <div><b>mℓ</b><span id="mainML">0</span><small>اتجاه الأوربيتال</small></div>
+        <div><b>mₛ</b><span id="mainMS">±½</span><small>اللف المغزلي</small></div>
+      </div>
+      <div id="mainExplanation" class="main-explanation">1s: إلكترون في المستوى الرئيسي الأول، في أوربيتال s الكروي. الأوربيتال نفسه يمكن أن يستوعب إلكترونين بلفين متعاكسين.</div>
+    </section>
+
     <section class="card panel">
       <h2>🎛️ التحكم</h2>
 
@@ -95,26 +126,499 @@
     </section>
 
     <section class="card panel compare-panel">
-      <h2>🔄 ماذا تغير عند تغيير العنصر؟</h2>
+      <h2>📌 ما الذي يوضحه النموذج؟</h2>
       <div class="compare">
-        <div><span class="compare-title">النواة</span><p>يتغير عدد البروتونات Z، فتزداد شحنة النواة.</p></div>
-        <div><span class="compare-title">الإلكترونات</span><p>يتغير عدد الإلكترونات ويتغير التوزيع الإلكتروني.</p></div>
-        <div><span class="compare-title">الأوربيتالات</span><p>العنصر يحدد أي الأوربيتالات تكون مشغولة في حالته الأرضية.</p></div>
+        <div><span class="compare-title">الإلكترون</span><p>يُوصف باحتمال وجوده في منطقة حول النواة، وليس بمسار ثابت.</p></div>
+        <div><span class="compare-title">الفلك</span><p>منطقة في الفراغ يكون فيها احتمال وجود الإلكترون أكبر.</p></div>
+        <div><span class="compare-title">الأعداد الكمية</span><p>تصف مستوى الطاقة الرئيسي والمستوى الفرعي واتجاه الفلك واللف المغزلي.</p></div>
       </div>
     </section>
   </aside>
+
+<section class="lesson-zone card" id="lesson">
+  <div class="lesson-header">
+    <div>
+      <div class="lesson-kicker">📘 الدرس 2 — تعلّم من الصفر</div>
+      <h2>النموذج الميكانيكي الموجي للذرة</h2>
+      <p>هذا القسم مكتوب بحيث تستطيع فهم الفكرة حتى لو لم تفتح الكتاب المدرسي. اقرأ بالترتيب، ثم استخدم المحاكاة والأمثلة والأسئلة لتثبيت الفهم.</p>
+    </div>
+    <div class="lesson-header-actions">
+      <button class="symbol-guide-btn" id="openSymbolGuide" type="button">🔊 كيف أنطق الرموز؟</button>
+      <a class="lesson-jump" href="#atomCanvas">العودة إلى التجسيم ↑</a>
+    </div>
+  </div>
+
+  <div class="learning-map" aria-label="خريطة التعلم">
+    <div class="learning-map-title">🧭 خريطة التعلم</div>
+    <div class="learning-map-steps">
+      <span>1 <b>الفكرة</b></span><i class="flow-arrow" dir="ltr" aria-hidden="true">→</i><span>2 <b>الفلك</b></span><i class="flow-arrow" dir="ltr" aria-hidden="true">→</i><span>3 <b>أعداد الكم</b></span><i class="flow-arrow" dir="ltr" aria-hidden="true">→</i><span>4 <b>القوانين</b></span><i class="flow-arrow" dir="ltr" aria-hidden="true">→</i><span>5 <b>التطبيق</b></span><i class="flow-arrow" dir="ltr" aria-hidden="true">→</i><span>6 <b>الاختبار</b></span>
+    </div>
+  </div>
+
+  <div class="symbol-guide" id="symbolGuide" hidden>
+    <div class="symbol-guide-head"><div><strong>🔊 دليل نطق الرموز والمصطلحات</strong><p>إذا كان الرمز الإنجليزي يربكك أثناء القراءة، استخدم زر 🔊 لسماع النطق أو اقرأ النطق العربي المكتوب بجانبه.</p></div><button id="closeSymbolGuide" type="button" aria-label="إغلاق دليل النطق">✕</button></div>
+    <div class="pronunciation-grid">
+      <div class="pronunciation-card"><b class="math">n</b><span>إن (n)</span><small>عدد الكم الرئيس</small><button type="button" class="speak-symbol" data-speak="n">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">ℓ</b><span>إل / إِل (ell)</span><small>عدد الكم الفرعي</small><button type="button" class="speak-symbol" data-speak="ell">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">mℓ</b><span>إم إل (m ell)</span><small>عدد الكم المغناطيسي</small><button type="button" class="speak-symbol" data-speak="m ell">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">mₛ</b><span>إم إس (m s)</span><small>عدد الكم المغزلي</small><button type="button" class="speak-symbol" data-speak="m s">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">s</b><span>إس</span><small>المستوى الفرعي s</small><button type="button" class="speak-symbol" data-speak="s">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">p</b><span>بي</span><small>المستوى الفرعي p</small><button type="button" class="speak-symbol" data-speak="p">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">d</b><span>دي</span><small>المستوى الفرعي d</small><button type="button" class="speak-symbol" data-speak="d">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">f</b><span>إف</span><small>المستوى الفرعي f</small><button type="button" class="speak-symbol" data-speak="f">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">Orbital</b><span>أوربيتال</span><small>الفلك</small><button type="button" class="speak-symbol" data-speak="orbital">🔊 اسمع</button></div>
+      <div class="pronunciation-card"><b class="math">Quantum Numbers</b><span>كوانتم نمبرز</span><small>أعداد الكم</small><button type="button" class="speak-symbol" data-speak="quantum numbers">🔊 اسمع</button></div>
+    </div>
+  </div>
+
+  <div class="lesson-tabs" role="tablist" aria-label="أقسام الدرس">
+    <div class="tab-group"><span class="tab-group-label">ابدأ وافهم الفكرة</span><div class="tab-group-buttons">
+      <button class="lesson-tab active" data-lesson="start">🚀 ابدأ من الصفر</button>
+      <button class="lesson-tab" data-lesson="development">🕰️ تطور النموذج</button>
+      <button class="lesson-tab" data-lesson="orbital">☁️ الفلك والأفلاك</button>
+    </div></div>
+    <div class="tab-group"><span class="tab-group-label">أعداد الكم</span><div class="tab-group-buttons">
+      <button class="lesson-tab" data-lesson="n">1️⃣ عدد الكم الرئيس <span class="math">n</span></button>
+      <button class="lesson-tab" data-lesson="l">2️⃣ عدد الكم الفرعي <span class="math">ℓ</span></button>
+      <button class="lesson-tab" data-lesson="ml">3️⃣ عدد الكم المغناطيسي <span class="math">mℓ</span></button>
+      <button class="lesson-tab" data-lesson="ms">4️⃣ عدد الكم المغزلي <span class="math">mₛ</span></button>
+    </div></div>
+    <div class="tab-group"><span class="tab-group-label">طبّق ثم اختبر نفسك</span><div class="tab-group-buttons">
+      <button class="lesson-tab" data-lesson="relations">🧮 القوانين والعلاقات</button>
+      <button class="lesson-tab" data-lesson="examples">✏️ أمثلة محلولة</button>
+      <button class="lesson-tab" data-lesson="qa">❓ أسئلة وأجوبة</button>
+      <button class="lesson-tab" data-lesson="review">🏁 اختبار ذاتي</button>
+    </div></div>
+  </div>
+
+  <div class="lesson-grid">
+    <article class="lesson-copy">
+
+      <section class="lesson-page active" data-page="start">
+        <span class="section-label">الخطوة 1 — الفكرة قبل التفاصيل</span>
+        <h3>ما الذي يحاول النموذج الميكانيكي الموجي أن يشرحَه؟</h3>
+        <p>الذرة تحتوي نواة صغيرة في مركزها، وحول النواة توجد إلكترونات. السؤال المهم هو: <strong>كيف نصف مكان الإلكترون وطاقة الإلكترون؟</strong></p>
+        <p>في النموذج الميكانيكي الموجي لا نقول إن الإلكترون يتحرك في دائرة محددة مثل كوكب حول الشمس. بدلًا من ذلك نصفه بمنطقة حول النواة يكون <strong>احتمال وجوده فيها كبيرًا</strong>.</p>
+        <div class="lesson-callout big-callout"><strong>الفكرة الذهبية:</strong> الإلكترون ليس كرة صغيرة نرسم لها مسارًا ثابتًا. ما نستطيع وصفه هو احتمال وجوده في مناطق مختلفة حول النواة.</div>
+
+        <h4>ثلاث كلمات يجب أن تعرفها أولًا</h4>
+        <div class="concept-grid">
+          <div><b>الذرة</b><span>نواة وإلكترونات حولها.</span></div>
+          <div><b>الإلكترون</b><span>جسيم سالب يوجد في حالات طاقة محددة.</span></div>
+          <div><b>الفلك Orbital</b><span>منطقة في الفراغ يكون فيها احتمال وجود الإلكترون أكبر.</span></div>
+        </div>
+
+        <h4>كيف نقرأ مثلًا 2p؟</h4>
+        <div class="read-code">
+          <div><strong>2</strong><span>عدد الكم الرئيس n = 2<br>أي المستوى الرئيس الثاني.</span></div>
+          <div><strong>p</strong><span>المستوى الفرعي p<br>ويرتبط بشكل الفلك وعدد أفلاكه.</span></div>
+        </div>
+        <p>إذن <strong>2p</strong> لا يعني اسم إلكترون، بل يصف مستوى فرعيًا ضمن المستوى الرئيس الثاني.</p>
+
+        <div class="step-strip">
+          <span>1. مستوى رئيس</span><b class="flow-arrow" dir="ltr" aria-hidden="true">→</b><span>2. مستوى فرعي</span><b class="flow-arrow" dir="ltr" aria-hidden="true">→</b><span>3. أفلاك</span><b class="flow-arrow" dir="ltr" aria-hidden="true">→</b><span>4. إلكترونات</span>
+        </div>
+      </section>
+
+      <section class="lesson-page" data-page="development">
+        <span class="section-label">الخطوة 2 — لماذا ظهر النموذج؟</span>
+        <h3>من نموذج بور إلى النموذج الميكانيكي الموجي</h3>
+        <p>حاول العلماء عبر الزمن بناء نماذج تفسر سلوك الإلكترونات. قدّم <strong>بور</strong> نموذجًا نجح في تفسير طيف ذرة الهيدروجين، وهذا كان إنجازًا مهمًا.</p>
+        <p>لكن نموذج بور لم يكن قادرًا على تفسير أطياف ذرات العناصر الأخرى بالصورة المطلوبة. لذلك استمرت التجارب والأفكار حول طبيعة الإلكترون.</p>
+        <p>وضع العالم النمساوي <strong>إرفين شرودنغر</strong> معادلة رياضية تسمى <strong>المعادلة الموجية</strong>. حل هذه المعادلة يعطي معلومات عن الحالات المسموح بها للإلكترون، ومنها الأعداد الكمية.</p>
+
+        <div class="timeline">
+          <div><b>بور</b><span>فسّر طيف الهيدروجين بنجاح ضمن نموذجه.</span></div>
+          <div><b>المشكلة</b><span>لم يكن النموذج كافيًا لوصف أطياف الذرات الأخرى.</span></div>
+          <div><b>شرودنغر</b><span>قدّم وصفًا رياضيًا موجيًا للإلكترون.</span></div>
+          <div><b>النموذج الحديث</b><span>نصف الإلكترون باحتمال وجوده في أفلاك، باستخدام أعداد الكم.</span></div>
+        </div>
+
+        <div class="lesson-callout"><strong>انتبه:</strong> ظهور النموذج الميكانيكي الموجي لا يعني أن الإلكترون صار "موجة فقط". المقصود أن سلوكه يوصف رياضيًا بطريقة موجية، وأن الناتج المفيد للدرس هو توزيع احتمال وجوده.</div>
+
+        <div class="model-lab" id="modelLab">
+          <div class="model-lab-head">
+            <div><span class="section-label">👀 شاهد الفرق بنفسك</span><h4>التصور القديم مقابل التصور الحديث</h4><p>استخدم الزرين لتبديل المشهد. الرسومات هنا <strong>نماذج تعليمية مبسطة</strong> وليست صورًا حقيقية للذرة.</p></div>
+            <div class="model-switch" role="group" aria-label="اختيار نموذج الذرة">
+              <button type="button" class="model-switch-btn active" data-model-view="bohr">☀️ التصور القديم</button>
+              <button type="button" class="model-switch-btn" data-model-view="wave">☁️ النموذج الموجي</button>
+            </div>
+          </div>
+          <div class="model-stage">
+            <div class="model-view active" data-model-panel="bohr">
+              <div class="visual-card">
+                <svg class="atom-visual" viewBox="0 0 500 300" role="img" aria-label="تمثيل تاريخي مبسط لنموذج بور بمستويات دائرية وإلكترون على مستوى محدد">
+                  <g transform="translate(250 150)">
+                    <circle r="34" class="nucleus-core"/><text x="0" y="5" text-anchor="middle" class="svg-label">النواة</text>
+                    <circle r="68" class="bohr-ring"/><circle r="112" class="bohr-ring"/><circle r="150" class="bohr-ring"/>
+                    <circle cx="68" cy="0" r="7" class="electron-dot"/>
+                    <path d="M 68 -17 L 68 17" class="bohr-marker"/>
+                    <text x="80" y="-23" class="svg-label">إلكترون</text>
+                    <text x="-34" y="-76" class="svg-label">مستوى طاقة</text>
+                  </g>
+                </svg>
+                <div class="visual-caption"><b>تمثيل تاريخي مبسط:</b> نرسم الإلكترون على مسار دائري محدد. هذا مفيد لفهم فكرة مستويات الطاقة، لكنه <strong>ليس الوصف الحديث لمكان الإلكترون</strong>.</div>
+              </div>
+            </div>
+            <div class="model-view" data-model-panel="wave" hidden>
+              <div class="visual-card">
+                <svg class="atom-visual wave-atom" viewBox="0 0 500 300" role="img" aria-label="تمثيل للنموذج الميكانيكي الموجي كسحابة احتمال حول النواة">
+                  <defs>
+                    <radialGradient id="cloudG2"><stop offset="0" stop-opacity=".85"/><stop offset=".38" stop-opacity=".55"/><stop offset=".72" stop-opacity=".18"/><stop offset="1" stop-opacity="0"/></radialGradient>
+                    <filter id="blurG2"><feGaussianBlur stdDeviation="7"/></filter>
+                  </defs>
+                  <g transform="translate(250 150)">
+                    <ellipse rx="142" ry="92" fill="url(#cloudG2)" filter="url(#blurG2)"/>
+                    <ellipse rx="112" ry="70" fill="none" stroke="rgba(126,220,255,.28)" stroke-width="2"/>
+                    <ellipse rx="82" ry="49" fill="none" stroke="rgba(126,220,255,.22)" stroke-width="2"/>
+                    <circle r="28" class="nucleus-core"/><text x="0" y="5" text-anchor="middle" class="svg-label">النواة</text>
+                    <text x="-175" y="-105" class="svg-label">احتمال أعلى</text>
+                  </g>
+                </svg>
+                <div class="visual-caption"><b>النموذج الميكانيكي الموجي:</b> لا نرسم مسارًا ثابتًا للإلكترون؛ نمثل <strong>توزيع احتمال وجوده</strong>. شكل السحابة يعتمد على الحالة/الفلك الذي نصفه.</div>
+              </div>
+            </div>
+          </div>
+          <div class="model-takeaway"><span>💡</span><p><strong>الخلاصة:</strong> المدار Orbit في الصورة القديمة هو مسار، أما الفلك Orbital في النموذج الموجي فهو منطقة احتمال. لا تخلط بين الكلمتين.</p></div>
+        </div>
+      </section>
+
+      <section class="lesson-page" data-page="orbital">
+        <span class="section-label">الخطوة 3 — أهم كلمة في الدرس</span>
+        <h3>ما هو الفلك Orbital؟ وما الفرق بينه وبين المدار؟</h3>
+        <p><strong>الفلك</strong> هو منطقة حول النواة يكون فيها احتمال وجود الإلكترون كبيرًا. لذلك فالسحابة التي تراها في المحاكاة تمثل <strong>توزيع الاحتمال</strong>، وليست خط سير للإلكترون.</p>
+        <div class="compare-box">
+          <div><b>المدار في الصورة القديمة</b><span>مسار محدد يُتصور أن الإلكترون يتحرك عليه.</span></div>
+          <div><b>الفلك في النموذج الموجي</b><span>منطقة احتمال؛ لا نرسم فيها مسارًا ثابتًا للإلكترون.</span></div>
+        </div>
+
+        <h4>أنواع المستويات الفرعية</h4>
+        <div class="type-cards">
+          <button class="type-card" data-orbital-type="s"><b>s</b><span>كروي تقريبًا</span><small>1 فلك → 2 إلكترون</small></button>
+          <button class="type-card" data-orbital-type="p"><b>p</b><span>فصّان</span><small>3 أفلاك → 6 إلكترونات</small></button>
+          <button class="type-card" data-orbital-type="d"><b>d</b><span>أشكال أكثر تعقيدًا</span><small>5 أفلاك → 10 إلكترونات</small></button>
+          <button class="type-card" data-orbital-type="f"><b>f</b><span>أشكال أكثر تعقيدًا</span><small>7 أفلاك → 14 إلكترونًا</small></button>
+        </div>
+
+        <div class="orbital-visual-lab">
+          <div class="orbital-lab-head"><div><h4>🧊 شاهد شكل الفلك</h4><p>اختر نوعًا لترى نموذجًا ثلاثي الأبعاد مبسطًا. تدوير الفكرة أهم من حفظ الشكل فقط: <strong>s كروي</strong>، <strong>p ثنائي الفص</strong>، و<strong>d/f</strong> أكثر تعقيدًا.</p></div><span class="mini-badge">مجسم تعليمي</span></div>
+          <div class="orbital-model-grid">
+            <button type="button" class="orbital-3d-card active" data-shape="s">
+              <svg class="orbital-svg" viewBox="0 0 120 90" aria-label="تمثيل s الكروي"><circle cx="60" cy="45" r="31" class="orb-cloud"/><circle cx="60" cy="45" r="4" class="orb-center"/></svg><b>s</b><small>كروي</small>
+            </button>
+            <button type="button" class="orbital-3d-card" data-shape="p">
+              <svg class="orbital-svg" viewBox="0 0 120 90" aria-label="تمثيل p ثنائي الفص"><path d="M60 43 C40 39 18 25 17 13 C16 5 27 3 37 9 C49 16 55 29 60 43 C65 29 71 16 83 9 C93 3 104 5 103 13 C102 25 80 39 60 43 C80 51 102 65 103 77 C104 85 93 87 83 81 C71 74 65 61 60 47 C55 61 49 74 37 81 C27 87 16 85 17 77 C18 65 40 51 60 47Z" class="orb-cloud"/><circle cx="60" cy="45" r="4" class="orb-center"/></svg><b>p</b><small>فصّان متقابلان</small>
+            </button>
+            <button type="button" class="orbital-3d-card" data-shape="d">
+              <svg class="orbital-svg" viewBox="0 0 120 90" aria-label="مثال لشكل d رباعي الفصوص"><path d="M60 44 C49 36 37 19 39 10 C41 3 49 4 55 9 C59 13 60 18 60 24 C60 18 61 13 65 9 C71 4 79 3 81 10 C83 19 71 36 60 44 C71 54 83 71 81 80 C79 87 71 86 65 81 C61 77 60 72 60 66 C60 72 59 77 55 81 C49 86 41 87 39 80 C37 71 49 54 60 44Z" class="orb-cloud"/><path d="M60 44 C52 35 35 32 28 36 C22 40 25 47 32 51 C39 55 50 51 60 46 C50 55 39 59 32 63 C25 67 22 74 28 78 C35 82 52 70 60 46 C68 70 85 82 92 78 C98 74 95 67 88 63 C81 59 70 55 60 46 C70 51 81 55 88 51 C95 47 98 40 92 36 C85 32 68 35 60 44Z" class="orb-cloud alt"/><circle cx="60" cy="45" r="3.5" class="orb-center"/></svg><b>d</b><small>مثال رباعي الفصوص</small>
+            </button>
+            <button type="button" class="orbital-3d-card" data-shape="f">
+              <svg class="orbital-svg" viewBox="0 0 120 90" aria-label="تمثيل تعليمي مبسط لفلك f"><path d="M60 44 C53 36 49 23 51 12 C52 5 58 3 62 8 C66 13 64 28 60 44 C66 28 72 13 77 8 C81 3 87 5 88 12 C90 23 84 36 60 44 C84 36 97 36 104 41 C109 45 108 51 102 53 C94 56 79 50 60 46 C79 50 94 56 102 63 C108 68 109 74 104 78 C97 83 84 78 60 48 C84 78 90 67 88 78 C87 85 81 87 77 82 C72 77 66 62 60 48 C54 62 48 77 43 82 C39 87 33 85 32 78 C30 67 36 78 60 48 C36 78 23 83 16 78 C11 74 12 68 18 63 C26 56 41 50 60 46 C41 50 26 56 18 53 C12 51 11 45 16 41 C23 36 36 36 60 44Z" class="orb-cloud"/><circle cx="60" cy="45" r="3" class="orb-center"/></svg><b>f</b><small>أشكال متعددة ومعقدة</small>
+            </button>
+          </div>
+          <div class="orbital-model-note" id="orbitalModelNote"><strong>s:</strong> هذا تمثيل تعليمي لشكل توزيع الاحتمال. s كروي وله فلك واحد. أما p وd وf فلها أشكال واتجاهات متعددة؛ الرسم يوضح الشكل العام ولا يمثل مسارًا للإلكترون.</div>
+          <div class="orbital-alignment-guide" dir="rtl"><b>🧭 محاذاة المجسم:</b> عند اختيار الأوربيتال من المحاكاة الرئيسية، يتغير المجسم تلقائيًا إلى التمثيل المناسب له. <span dir="ltr" class="math">p</span> يُعرض بمحور واضح، و<span dir="ltr" class="math">d/f</span> يُعرضان كأشكال ممثلة لعائلة الأشكال، وليس كأن لكل منهما شكلًا واحدًا فقط.</div>
+        </div>
+
+        <h4>قاعدة سهلة للحفظ</h4>
+        <div class="memory-table">
+          <div><b>s</b><span>1 فلك</span><strong>2 e⁻</strong></div>
+          <div><b>p</b><span>3 أفلاك</span><strong>6 e⁻</strong></div>
+          <div><b>d</b><span>5 أفلاك</span><strong>10 e⁻</strong></div>
+          <div><b>f</b><span>7 أفلاك</span><strong>14 e⁻</strong></div>
+        </div>
+        <p class="hint-line">لاحظ النمط: عدد الأفلاك 1، 3، 5، 7؛ وكل فلك يستوعب إلكترونين، لذلك السعة 2، 6، 10، 14.</p>
+      </section>
+
+      <section class="lesson-page" data-page="n">
+        <span class="section-label">الخطوة 4 — عدد الكم الرئيس</span>
+        <h3>عدد الكم الرئيس n: أين يقع مستوى الطاقة تقريبًا؟</h3>
+        <p>عدد الكم الرئيس <strong>n</strong> يأخذ قيمًا صحيحة موجبة: <strong>1، 2، 3، 4، ...</strong>. وهو يحدد <strong>مستوى الطاقة الرئيس</strong> ويرتبط بحجم المستوى وبعده عن النواة.</p>
+        <div class="number-cards">
+          <div><b>n = 1</b><span>الأقرب إلى النواة</span><small>يسمى أحيانًا K</small></div>
+          <div><b>n = 2</b><span>أبعد وأكبر من الأول</span><small>L</small></div>
+          <div><b>n = 3</b><span>أبعد وأكبر</span><small>M</small></div>
+          <div><b>n = 4</b><span>أبعد وأكبر</span><small>N</small></div>
+        </div>
+        <p>بصورة عامة: كلما زادت قيمة <strong>n</strong> زاد متوسط بُعد المستوى عن النواة، وازداد حجمه وطاقته.</p>
+
+        <h4>كم مستوى فرعيًا يوجد داخل المستوى الرئيس؟</h4>
+        <p>المستوى الرئيس رقم <strong>n</strong> يحتوي <strong>n مستويات فرعية</strong>.</p>
+        <div class="formula-row"><span dir="ltr">n=1 <b class="flow-arrow">→</b> s</span><span dir="ltr">n=2 <b class="flow-arrow">→</b> s,p</span><span dir="ltr">n=3 <b class="flow-arrow">→</b> s,p,d</span><span dir="ltr">n=4 <b class="flow-arrow">→</b> s,p,d,f</span></div>
+        <div class="example-box"><b>مثال:</b> المستوى الرئيس الثالث n=3 يحتوي 3 مستويات فرعية: 3s و3p و3d.</div>
+      </section>
+
+      <section class="lesson-page" data-page="l">
+        <span class="section-label">الخطوة 5 — عدد الكم الفرعي</span>
+        <h3>عدد الكم الفرعي ℓ: ما نوع المستوى الفرعي وشكل الفلك؟</h3>
+        <p>عدد الكم الفرعي <strong>ℓ</strong> يصف المستوى الفرعي ويرتبط بالشكل العام للأفلاك الموجودة فيه.</p>
+        <div class="quantum-map">
+          <div><b>ℓ = 0</b><strong>s</strong><span>1 فلك</span></div>
+          <div><b>ℓ = 1</b><strong>p</strong><span>3 أفلاك</span></div>
+          <div><b>ℓ = 2</b><strong>d</strong><span>5 أفلاك</span></div>
+          <div><b>ℓ = 3</b><strong>f</strong><span>7 أفلاك</span></div>
+        </div>
+        <p><strong>قاعدة مهمة جدًا:</strong> في المستوى الرئيس n، يمكن أن يأخذ ℓ القيم من <strong>0 إلى n−1</strong>.</p>
+        <div class="worked-mini">
+          <b>مثال 1: n=2</b>
+          <span>ℓ = 0 أو 1 <b class="flow-arrow" dir="ltr">→</b> s وp <b class="flow-arrow" dir="ltr">→</b> إذن المستوى الثاني فيه <span class="math">2s</span> و<span class="math">2p</span>.</span>
+          <b>مثال 2: n=4</b>
+          <span>ℓ = 0 أو 1 أو 2 أو 3 <b class="flow-arrow" dir="ltr">→</b> s وp وd وf.</span>
+        </div>
+        <div class="lesson-callout">لا تخلط بين <strong>n</strong> و<strong>ℓ</strong>: n يحدد المستوى الرئيس، بينما ℓ يحدد المستوى الفرعي داخله.</div>
+      </section>
+
+      <section class="lesson-page" data-page="ml">
+        <span class="section-label">الخطوة 6 — عدد الكم المغناطيسي</span>
+        <h3>عدد الكم المغناطيسي mℓ: كم فلكًا؟ وما اتجاهه؟</h3>
+        <p>عدد الكم المغناطيسي <strong>mℓ</strong> يحدد الأفلاك الموجودة في المستوى الفرعي واتجاهها الفراغي بالنسبة إلى بعضها.</p>
+        <p>قيم mℓ تكون من <strong>−ℓ إلى +ℓ</strong>، شاملًا الصفر.</p>
+        <div class="formula-row"><span dir="ltr">ℓ=0 <b class="flow-arrow">→</b> mℓ=0</span><span dir="ltr">ℓ=1 <b class="flow-arrow">→</b> −1, 0, +1</span><span dir="ltr">ℓ=2 <b class="flow-arrow">→</b> −2, −1, 0, +1, +2</span><span dir="ltr">ℓ=3 <b class="flow-arrow">→</b> 7 قيم</span></div>
+        <div class="example-box"><b>لماذا p فيه 3 أفلاك؟</b> لأن ℓ=1، لذلك mℓ يأخذ −1 و0 و+1، أي ثلاث قيم → ثلاثة أفلاك.</div>
+
+        <h4>مثال بصري: أفلاك p</h4>
+        <div class="axis-cards">
+          <div><b>pₓ</b><span>اتجاه على محور x</span></div>
+          <div><b>pᵧ</b><span>اتجاه على محور y</span></div>
+          <div><b>p_z</b><span>اتجاه على محور z</span></div>
+        </div>
+        <p>الأفلاك الثلاثة في p متماثلة في النوع والطاقة في المستوى نفسه، لكنها تختلف في الاتجاه الفراغي.</p>
+      </section>
+
+      <section class="lesson-page" data-page="ms">
+        <span class="section-label">الخطوة 7 — عدد الكم المغزلي</span>
+        <h3>عدد الكم المغزلي mₛ: كيف نصف حالة الإلكترون داخل الفلك؟</h3>
+        <p>عدد الكم المغزلي <strong>mₛ</strong> هو العدد الرابع. وله قيمتان فقط: <strong>+1/2</strong> أو <strong>−1/2</strong>.</p>
+        <div class="spin-box large-spin"><div><span>↑</span><b>mₛ = +1/2</b></div><div><span>↓</span><b>mₛ = −1/2</b></div></div>
+        <p>في الوصف المدرسي يقال إن الإلكترون له اتجاهان للّف المغزلي. من المهم فهمه كـ<strong>خاصية كمومية</strong> للإلكترون، وليس ككرة صغيرة تدور حرفيًا حول نفسها بالطريقة الميكانيكية العادية.</p>
+
+        <h4>لماذا يسع الفلك إلكترونين فقط؟</h4>
+        <p>الإلكترونان اللذان يشغلان الفلك نفسه يكون لهما عددان مغزليان متعاكسان. لذلك السعة القصوى للفلك الواحد هي <strong>إلكترونان</strong>.</p>
+        <div class="lesson-callout"><strong>احفظ:</strong> فلك واحد = 2 إلكترون كحد أقصى، والقيمتان الممكنتان لـ mₛ هما +1/2 و−1/2.</div>
+      </section>
+
+      <section class="lesson-page" data-page="relations">
+        <span class="section-label">الخطوة 8 — العلاقات التي تحل أسئلة الامتحان</span>
+        <h3>كل القواعد في مكان واحد</h3>
+
+        <div class="relation-cards">
+          <div><b>عدد المستويات الفرعية في المستوى الرئيس</b><strong>n</strong><small>مثلًا n=4 → أربعة مستويات فرعية.</small></div>
+          <div><b>عدد الأفلاك في المستوى الرئيس</b><strong>n²</strong><small>مثلًا n=3 → 9 أفلاك.</small></div>
+          <div><b>السعة القصوى للمستوى الرئيس</b><strong>2n²</strong><small>مثلًا n=4 → 32 إلكترونًا.</small></div>
+          <div><b>قيم ℓ الممكنة</b><strong>0 → n−1</strong><small>مثلًا n=3 → ℓ=0,1,2.</small></div>
+          <div><b>قيم mℓ</b><strong>−ℓ → +ℓ</strong><small>عددها = 2ℓ+1.</small></div>
+          <div><b>قيم mₛ</b><strong>+1/2 أو −1/2</strong><small>قيمتان فقط.</small></div>
+        </div>
+
+        <h4>السعات التي يجب أن تحفظها</h4>
+        <div class="memory-table">
+          <div><b>s</b><span>1 فلك</span><strong>2 e⁻</strong></div>
+          <div><b>p</b><span>3 أفلاك</span><strong>6 e⁻</strong></div>
+          <div><b>d</b><span>5 أفلاك</span><strong>10 e⁻</strong></div>
+          <div><b>f</b><span>7 أفلاك</span><strong>14 e⁻</strong></div>
+        </div>
+
+        <h4>سلسلة الحل السريعة</h4>
+        <div class="step-strip vertical">
+          <span><b>إذا أعطاك n:</b> اكتب ℓ من 0 إلى n−1.</span>
+          <span><b>لكل ℓ:</b> حدّد s/p/d/f.</span>
+          <span><b>لكل ℓ:</b> عدد الأفلاك = 2ℓ+1.</span>
+          <span><b>السعة:</b> عدد الأفلاك × 2.</span>
+          <span><b>للمستوى الرئيس:</b> عدد الأفلاك = n² والسعة = 2n².</span>
+        </div>
+      </section>
+
+      <section class="lesson-page" data-page="examples">
+        <span class="section-label">الخطوة 9 — تعلّم من الحل</span>
+        <h3>أمثلة محلولة خطوة بخطوة</h3>
+
+        <div class="worked-example">
+          <h4>مثال 1: كم عدد المستويات الفرعية في n=4؟</h4>
+          <p><b>المعطى:</b> n=4.</p>
+          <p><b>القاعدة:</b> عدد المستويات الفرعية = n.</p>
+          <p><b>الحل:</b> 4 مستويات فرعية: 4s و4p و4d و4f.</p>
+          <p class="answer-line">✅ الإجابة: <strong>4 مستويات فرعية.</strong></p>
+        </div>
+
+        <div class="worked-example">
+          <h4>مثال 2: كم فلكًا في المستوى الفرعي d؟</h4>
+          <p>للمستوى d قيمة ℓ=2.</p>
+          <p>عدد الأفلاك = 2ℓ+1 = 2(2)+1 = <strong>5</strong>.</p>
+          <p class="answer-line">✅ الإجابة: <strong>5 أفلاك.</strong></p>
+        </div>
+
+        <div class="worked-example">
+          <h4>مثال 3: كم إلكترونًا يستطيع المستوى الرئيس n=4 استيعابه؟</h4>
+          <p>السعة القصوى = 2n².</p>
+          <p>= 2 × 4² = 2 × 16 = <strong>32</strong>.</p>
+          <p class="answer-line">✅ الإجابة: <strong>32 إلكترونًا.</strong></p>
+        </div>
+
+        <div class="worked-example">
+          <h4>مثال 4: كم فلكًا في المستوى الرئيس n=3؟</h4>
+          <p>عدد الأفلاك = n² = 3² = <strong>9</strong>.</p>
+          <p>ويمكن التأكد: 3s فيه 1 + 3p فيه 3 + 3d فيه 5 → 1+3+5=9.</p>
+          <p class="answer-line">✅ الإجابة: <strong>9 أفلاك.</strong></p>
+        </div>
+
+        <div class="worked-example">
+          <h4>مثال 5: ما قيم mℓ عندما ℓ=2؟</h4>
+          <p>نبدأ من −ℓ وننتهي عند +ℓ:</p>
+          <p><strong>−2، −1، 0، +1، +2</strong>.</p>
+          <p>عدد القيم 5، لذلك d يحتوي 5 أفلاك.</p>
+        </div>
+
+        <div class="worked-example">
+          <h4>مثال 6: ماذا يعني 3p؟</h4>
+          <p><strong>3</strong> = n=3، أي المستوى الرئيس الثالث.</p>
+          <p><strong>p</strong> = ℓ=1، أي المستوى الفرعي p، وفيه 3 أفلاك وسعته 6 إلكترونات.</p>
+          <p class="answer-line">✅ إذن 3p = مستوى فرعي p داخل المستوى الرئيس الثالث.</p>
+        </div>
+
+        <div class="worked-example">
+          <h4>مثال 7: إذا كان n=2، فما قيم ℓ وما المستويات الفرعية؟</h4>
+          <p>ℓ من 0 إلى n−1 → من 0 إلى 1.</p>
+          <p>ℓ=0 <b class="flow-arrow" dir="ltr">→</b> s، وℓ=1 <b class="flow-arrow" dir="ltr">→</b> p.</p>
+          <p class="answer-line">✅ المستويان الفرعيان هما <strong>2s و2p</strong>.</p>
+        </div>
+      </section>
+
+      <section class="lesson-page" data-page="qa">
+        <span class="section-label">الخطوة 10 — بنك الأسئلة والأجوبة</span>
+        <h3>أسئلة شاملة مع الإجابة والتفسير</h3>
+        <p>هذا القسم مقصود للمراجعة. حاول الإجابة بنفسك أولًا، ثم افتح الإجابة.</p>
+
+        <div class="qa-list">
+          <details open><summary>1) ما الفكرة الرئيسة للنموذج الميكانيكي الموجي؟</summary><p>وصف وجود الإلكترون وطاقته في الذرة باستخدام مناطق احتمال حول النواة، تسمى أفلاكًا، مع استخدام أعداد الكم لوصف حالته.</p></details>
+          <details><summary>2) ما الفلك Orbital؟</summary><p>منطقة حول النواة يكون فيها احتمال وجود الإلكترون كبيرًا. الفلك ليس مسارًا دائريًا ثابتًا.</p></details>
+          <details><summary>3) لماذا لم يكن نموذج بور كافيًا لجميع الذرات؟</summary><p>نجح في تفسير طيف الهيدروجين، لكنه لم يفسر أطياف العناصر الأخرى بصورة كافية، فظهرت الحاجة إلى وصف أكثر شمولًا.</p></details>
+          <details><summary>4) من العالم المرتبط بالمعادلة الموجية؟</summary><p>إرفين شرودنغر، العالم النمساوي الذي وضع المعادلة الموجية التي أسهم حلها في وصف حالات الإلكترون.</p></details>
+          <details><summary>5) ما عدد أعداد الكم المستخدمة لوصف الإلكترون في هذا الدرس؟</summary><p>أربعة: الرئيس n، والفرعي ℓ، والمغناطيسي mℓ، والمغزلي mₛ.</p></details>
+          <details><summary>6) ماذا يحدد n؟</summary><p>يحدد مستوى الطاقة الرئيس، ويرتبط ببعد المستوى عن النواة وحجمه. كلما زادت n زاد حجم المستوى وبعده عن النواة بصورة عامة.</p></details>
+          <details><summary>7) ماذا يحدد ℓ؟</summary><p>يحدد المستوى الفرعي داخل المستوى الرئيس ويرتبط بالشكل العام للفلك.</p></details>
+          <details><summary>8) ما قيم ℓ الممكنة عندما n=3؟</summary><p>0 و1 و2، أي المستويات الفرعية s وp وd.</p></details>
+          <details><summary>9) كم مستوى فرعيًا في n=4؟</summary><p>أربعة: 4s و4p و4d و4f.</p></details>
+          <details><summary>10) كم فلكًا في s؟</summary><p>فلك واحد، لأن ℓ=0 → 2ℓ+1=1.</p></details>
+          <details><summary>11) كم فلكًا في p؟</summary><p>3 أفلاك، وهي pₓ وpᵧ وp_z.</p></details>
+          <details><summary>12) كم فلكًا في d؟</summary><p>5 أفلاك.</p></details>
+          <details><summary>13) كم فلكًا في f؟</summary><p>7 أفلاك.</p></details>
+          <details><summary>14) ما السعة القصوى لـ s وp وd وf؟</summary><p>s = 2، p = 6، d = 10، f = 14 إلكترونًا.</p></details>
+          <details><summary>15) لماذا كل فلك يستوعب إلكترونين فقط؟</summary><p>لأن للإلكترون حالتين ممكنتين للعدد المغزلي mₛ: +1/2 و−1/2، وعند امتلاء الفلك بإلكترونين يكونان بحالتين مغزليتين متعاكستين.</p></details>
+          <details><summary>16) ما قيم mℓ إذا ℓ=1؟</summary><p>−1 و0 و+1، أي ثلاث قيم، ولذلك p فيه ثلاثة أفلاك.</p></details>
+          <details><summary>17) ما قيم mℓ إذا ℓ=3؟</summary><p>−3، −2، −1، 0، +1، +2، +3؛ أي سبع قيم، ولذلك f فيه 7 أفلاك.</p></details>
+          <details><summary>18) ما قيم mₛ الممكنة؟</summary><p>+1/2 و−1/2 فقط.</p></details>
+          <details><summary>19) كم فلكًا في المستوى الرئيس n=3؟</summary><p>n² = 3² = 9 أفلاك.</p></details>
+          <details><summary>20) كم إلكترونًا يستوعب المستوى الرئيس n=3؟</summary><p>2n² = 2×3² = 18 إلكترونًا.</p></details>
+          <details><summary>21) كم إلكترونًا يستوعب المستوى الرئيس n=4؟</summary><p>2n² = 2×4² = 32 إلكترونًا.</p></details>
+          <details><summary>22) ما الفرق بين n وℓ؟</summary><p>n يحدد المستوى الرئيس، أما ℓ فيحدد المستوى الفرعي داخله.</p></details>
+          <details><summary>23) ما الفرق بين ℓ وmℓ؟</summary><p>ℓ يحدد نوع المستوى الفرعي (s,p,d,f)، بينما mℓ يحدد الأفلاك داخل ذلك المستوى الفرعي واتجاهاتها الفراغية.</p></details>
+          <details><summary>24) لماذا يوجد 3p وليس 1p؟</summary><p>لأن قيم ℓ يجب أن تبدأ من 0 إلى n−1. عند n=1 يسمح فقط ℓ=0، أي s. أما p فيحتاج ℓ=1، لذلك يبدأ p من n=2.</p></details>
+          <details><summary>25) هل السحابة في المحاكاة تمثل عدد الإلكترونات الحقيقي؟</summary><p>لا. النقاط وسيلة بصرية لتمثيل توزيع الاحتمال، وليست عددًا حقيقيًا من الإلكترونات.</p></details>
+          <details><summary>26) ماذا تعني 4d؟</summary><p>المستوى الرئيس الرابع (n=4) والمستوى الفرعي d (ℓ=2). هذا المستوى الفرعي يحتوي 5 أفلاك وسعته 10 إلكترونات.</p></details>
+          <details><summary>27) إذا كان ℓ=0، فما اسم المستوى الفرعي وعدد أفلاكه وسعته؟</summary><p>s، وفيه فلك واحد، وسعته إلكترونان.</p></details>
+          <details><summary>28) إذا كان ℓ=2، فما اسم المستوى الفرعي وعدد أفلاكه وسعته؟</summary><p>d، وفيه 5 أفلاك، وسعته 10 إلكترونات.</p></details>
+          <details><summary>29) إذا قال السؤال "حدد عدد المستويات الفرعية في n=5"، ماذا أفعل؟</summary><p>عدد المستويات الفرعية يساوي n، إذن 5 مستويات فرعية: 5s و5p و5d و5f، إضافة إلى المستوى ذي ℓ=4 الذي يرمز له عادةً g إذا خرج السؤال عن نطاق هذا الدرس. ضمن نطاق الدرس المدرسي الحالي تُدرّس المستويات s,p,d,f حتى n=4.</p></details>
+          <details><summary>30) ما أهم أربع أشياء يجب أن أحفظها قبل الامتحان؟</summary><p>احفظ: n = مستوى رئيس، ℓ = نوع المستوى الفرعي، mℓ = الأفلاك واتجاهها، mₛ = اتجاه اللف المغزلي. ثم احفظ: عدد الأفلاك في المستوى الرئيس n²، والسعة القصوى 2n²، وسعات s,p,d,f هي 2،6،10،14.</p></details>
+        </div>
+      </section>
+
+      <section class="lesson-page" data-page="review">
+        <span class="section-label">الخطوة 11 — اختبر نفسك</span>
+        <h3>🎯 اختبار ذاتي تفاعلي</h3>
+        <p class="review-intro">اقرأ السؤال وحاول تحلّه بنفسك أولًا. جواب كل سؤال مخفي، واضغط على زر <strong>إظهار الجواب</strong> عندما تريد التأكد من إجابتك.</p>
+
+        <div class="self-test-controls">
+          <button id="toggleAllAnswers" class="all-answers-btn" type="button" aria-expanded="false">👁️ إظهار جميع الإجابات</button>
+          <span id="answerStatus" class="answer-status">كل الإجابات مخفية — حاول أولًا قبل الكشف عنها.</span>
+        </div>
+
+        <div class="self-test-list">
+          <div class="self-test-item"><div class="question-number">1</div><div class="question-content"><h4>أوضح المقصود بكل عدد من أعداد الكم الأربعة.</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> n يحدد مستوى الطاقة الرئيس، وℓ يحدد المستوى الفرعي وشكل الفلك، وmℓ يحدد الفلك واتجاهه الفراغي، وmₛ يحدد اتجاه اللف المغزلي للإلكترون.</div></div></div>
+          <div class="self-test-item"><div class="question-number">2</div><div class="question-content"><h4>لماذا احتاج العلماء إلى النموذج الميكانيكي الموجي بعد نموذج بور؟</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> لأن نموذج بور نجح بشكل أساسي في تفسير طيف ذرة الهيدروجين، لكنه لم يكن كافيًا لتفسير أطياف الذرات الأخرى، لذلك احتاج العلماء إلى نموذج أكثر شمولًا لوصف الإلكترون.</div></div></div>
+          <div class="self-test-item"><div class="question-number">3</div><div class="question-content"><h4>ما المقصود بالفلك Orbital؟ ولماذا لا نعدّه مسارًا ثابتًا للإلكترون؟</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> الفلك منطقة حول النواة يكون فيها احتمال وجود الإلكترون كبيرًا. لذلك لا نمثل الإلكترون كجسم يدور في مسار دائري محدد مثل الكوكب حول الشمس.</div></div></div>
+          <div class="self-test-item"><div class="question-number">4</div><div class="question-content"><h4>حدد المستويات الفرعية الموجودة في المستوى الرئيس n=3.</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> عندما n=3 تكون قيم ℓ من 0 إلى 2، لذلك المستويات الفرعية هي: 3s و3p و3d.</div></div></div>
+          <div class="self-test-item"><div class="question-number">5</div><div class="question-content"><h4>حدد قيم ℓ الممكنة عندما n=4.</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> ℓ يأخذ القيم من 0 إلى n−1، لذلك عند n=4 تكون القيم: 0، 1، 2، 3، وتمثل s وp وd وf.</div></div></div>
+          <div class="self-test-item"><div class="question-number">6</div><div class="question-content"><h4>كم فلكًا في المستوى الفرعي p؟ وكم إلكترونًا يستوعب؟</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> المستوى p له ℓ=1، وعدد أفلاكه = <span class="math">2ℓ+1 = 3</span> أفلاك، وكل فلك يستوعب إلكترونين؛ لذلك سعته القصوى 6 إلكترونات.</div></div></div>
+          <div class="self-test-item"><div class="question-number">7</div><div class="question-content"><h4>كم فلكًا في المستوى الفرعي d؟</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> d يقابل ℓ=2، لذلك عدد الأفلاك = 2(2)+1 = 5 أفلاك.</div></div></div>
+          <div class="self-test-item"><div class="question-number">8</div><div class="question-content"><h4>ما قيم mℓ عندما ℓ=2؟</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> قيم mℓ تمتد من −ℓ إلى +ℓ، لذلك: −2، −1، 0، +1، +2. وعددها 5، ولهذا يحتوي d على 5 أفلاك.</div></div></div>
+          <div class="self-test-item"><div class="question-number">9</div><div class="question-content"><h4>ما قيم mₛ الممكنة للإلكترون؟</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> توجد قيمتان فقط: +1/2 و−1/2، وهما تمثلان حالتي اللف المغزلي الممكنتين.</div></div></div>
+          <div class="self-test-item"><div class="question-number">10</div><div class="question-content"><h4>احسب عدد الأفلاك في المستوى الرئيس n=4.</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> عدد الأفلاك في المستوى الرئيس = n²، إذن 4² = <strong>16 فلكًا</strong>.</div></div></div>
+          <div class="self-test-item"><div class="question-number">11</div><div class="question-content"><h4>احسب السعة القصوى للمستوى الرئيس n=4.</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> السعة القصوى = 2n² = 2×4² = 2×16 = <strong>32 إلكترونًا</strong>.</div></div></div>
+          <div class="self-test-item"><div class="question-number">12</div><div class="question-content"><h4>احسب عدد الأفلاك والسعة القصوى للمستوى الفرعي f.</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> f يقابل ℓ=3، لذلك عدد الأفلاك = 2(3)+1 = <strong>7 أفلاك</strong>، والسعة = 7×2 = <strong>14 إلكترونًا</strong>.</div></div></div>
+          <div class="self-test-item"><div class="question-number">13</div><div class="question-content"><h4>فسر لماذا لا يدخل إلكترون ثالث إلى فلك يحتوي إلكترونين.</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> الفلك الواحد يستوعب إلكترونين فقط، ويكون لهما عدد مغزلي متعاكس: أحدهما +1/2 والآخر −1/2. لذلك لا توجد حالة ثالثة مسموحة في الفلك نفسه.</div></div></div>
+          <div class="self-test-item"><div class="question-number">14</div><div class="question-content"><h4>فسر الفرق بين 3s و3p.</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> الرقم 3 في الاثنين يعني n=3. لكن s يعني ℓ=0 وله فلك واحد وسعة 2 إلكترون، بينما p يعني ℓ=1 وله 3 أفلاك وسعة 6 إلكترونات.</div></div></div>
+          <div class="self-test-item"><div class="question-number">15</div><div class="question-content"><h4>ماذا يعني اختيار 4d في المحاكاة؟</h4><button class="answer-toggle" type="button" aria-expanded="false">👁️ إظهار الجواب</button><div class="hidden-answer" hidden><strong>الجواب:</strong> يعني المستوى الرئيس الرابع n=4 والمستوى الفرعي d حيث ℓ=2. ويحتوي هذا المستوى الفرعي على 5 أفلاك، وسعته القصوى 10 إلكترونات.</div></div></div>
+        </div>
+
+        <div class="final-memory">
+          <h4>🧠 قبل أن تنهي الاختبار</h4>
+          <p>إذا استطعت حل الأسئلة السابقة دون فتح الأجوبة، فأنت فهمت العلاقات الأساسية: <strong>عدد الأفلاك في المستوى الرئيس = n²</strong>، و<strong>السعة القصوى = 2n²</strong>، وعدد أفلاك المستوى الفرعي = <strong>2ℓ+1</strong>.</p>
+        </div>
+      </section>
+
+    </article>
+
+    <aside class="lesson-live">
+      <div class="live-card">
+        <div class="live-title"><span>🔗 ربط الدرس بالمحاكاة</span><span class="live-dot"></span></div>
+        <p>تتغير هذه البيانات بحسب العنصر والأوربيتال اللذين تختارهما.</p>
+        <div class="live-grid">
+          <div><span>العنصر</span><strong id="lessonElement">H</strong></div>
+          <div><span>عدد المستويات الرئيسة</span><strong id="lessonLevels">1</strong></div>
+          <div><span>الأوربيتال</span><strong id="lessonOrbital">1s</strong></div>
+          <div><span>عدد الكم ℓ</span><strong id="lessonL">0</strong></div>
+        </div>
+      </div>
+
+      <div class="live-card">
+        <div class="live-title">🧭 كيف تستخدم المشروع؟</div>
+        <ol class="use-steps">
+          <li>اقرأ "ابدأ من الصفر".</li>
+          <li>جرّب 1s ثم 2p ثم 3d من قائمة الأوربيتالات.</li>
+          <li>غيّر العنصر ولاحظ التوزيع الإلكتروني.</li>
+          <li>ارجع للأمثلة وحاول حلها دون النظر للحل.</li>
+          <li>اختم ببنك الأسئلة والاختبار الذاتي.</li>
+        </ol>
+      </div>
+
+      <div class="live-card">
+        <div class="live-title">ماذا تلاحظ الآن؟</div>
+        <div id="lessonObservation" class="observation">غيّر العنصر أو الأوربيتال، ثم اربط ما تراه بمستوى الطاقة الرئيس والمستوى الفرعي وشكل الفلك.</div>
+      </div>
+
+      <div class="live-card shell-map-card">
+        <div class="live-title">مستويات الطاقة في العنصر الحالي</div>
+        <div id="lessonShellMap" class="shell-map"></div>
+      </div>
+
+      <div class="live-card">
+        <div class="live-title">⚡ اختبار سريع</div>
+        <div class="quick-quiz">
+          <p><b>إذا اخترت 3p:</b> ما قيمة n؟ وما قيمة ℓ؟ وكم فلكًا في p؟</p>
+          <p class="quiz-answer">الإجابة: n=3، ℓ=1، وعدد الأفلاك 3.</p>
+        </div>
+      </div>
+
+      <div class="live-card source-card">
+        <div class="live-title">📚 مصادر للمعلومة العلمية</div>
+        <p>صُممت الرسومات داخل المشروع كرسومات تعليمية أصلية، واعتمد شرح الفكرة العامة للأفلاك والنموذج الموجي على مراجع تعليمية مثل OpenStax وChemistry LibreTexts.</p>
+      </div>
+
+      <div class="live-card">
+        <div class="live-title">📌 تذكّر</div>
+        <p>الفلك منطقة احتمال، وليس مسارًا. الرقم في 2p هو n، والحرف p يرمز إلى المستوى الفرعي، وأعداد الكم الأربعة تصف حالة الإلكترون.</p>
+      </div>
+    </aside>
+  </div>
+</section>
 </main>
 
 <footer>
-  <span>Quantum Atom Simulator v10.6</span>
+  <span>Quantum Atom Simulator v12.0 — درس النموذج الميكانيكي الموجي</span>
   <span>* عدد النيوترونات تقديري تعليميًا وليس نظيرًا محددًا.</span>
 </footer>
 <script src="script.js"></script>
-
-<div id="quantumDiagnostics" style="position:fixed;right:12px;bottom:12px;z-index:9999;background:#111827;color:white;padding:12px;border-radius:10px;max-width:320px">
-<b>Quantum Diagnostics v10.6.6</b>
-<div id="qdContent">Loading...</div>
-</div>
+<script src="lesson.js"></script>
 </body>
 
 </html>
